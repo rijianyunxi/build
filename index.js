@@ -24,20 +24,7 @@ function init(){
     build();
     toZip();
 }
-function writeEnv() {
-    let willBuildEnv = args[1];
-    if(!willBuildEnv){
-        console.error('请指定打包的环境,如【lng】【dev】【test】');
-        process.exit();
-    }
-    let envStr = envObj[willBuildEnv];
-    if(!envStr) {
-        console.error(`您指定的环境不存在，请检查或再【envObj】添加！`);
-        process.exit();
-    }
-    fs.writeFileSync(path.join(__dirname,'.env'),envStr,'utf8');
-    console.log(`环境配置完成,当前环境:【${willBuildEnv}】`)
-}
+
 
 
 
@@ -52,16 +39,29 @@ function checkBranch() {
         try{
             console.log(`当前分支:【${branchName}】,打包分支:【${willBuildBranch}】,正在尝试切换分支...`);
             execSync("git checkout "+ args[0]);
-            console.log(`切换分支成功,当前分支:【${willBuildBranch}】',开始打包...`);
+            console.log(`切换分支成功,当前分支:【${willBuildBranch}】`);
             // build();
         }catch (e) {
             console.log('自动切换分支失败,请手动切换',e);
             process.exit();
         }
     }
-    console.log(`开始打包...`)
 }
 
+function writeEnv() {
+    let willBuildEnv = args[1];
+    if(!willBuildEnv){
+        console.error('请指定打包的环境,如【lng】【dev】【test】');
+        process.exit();
+    }
+    let envStr = envObj[willBuildEnv];
+    if(!envStr) {
+        console.error(`您指定的环境不存在，请检查或再【envObj】添加！`);
+        process.exit();
+    }
+    fs.writeFileSync(path.join(process.cwd(),'.env'),envStr,'utf8');
+    console.log(`环境配置完成,当前环境:【${willBuildEnv}】`)
+}
 
 function build(){
     console.log('正在打包中，请耐心等待...');
@@ -71,12 +71,12 @@ function build(){
 
 function toZip() {
     let fileName = getFileName();
-    const output = fs.createWriteStream(path.join(__dirname, `${fileName}.zip`));
+    const output = fs.createWriteStream(path.join(process.cwd(), `${fileName}.zip`));
     const archive = archiver('zip', {
         zlib: {level: 9}
     });
     archive.pipe(output);
-    archive.directory(path.join(__dirname,'dist'),false);
+    archive.directory(path.join(process.cwd(),'dist'),false);
     archive.finalize().then(res=>{
         output.on('close', function () {
             console.log(`压缩完成!文件名:${fileName}.zip,文件大小:${archive.pointer()} total bytes`);
